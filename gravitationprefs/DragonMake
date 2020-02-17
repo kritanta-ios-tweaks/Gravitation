@@ -1,0 +1,25 @@
+# DragonMake, named after sharing similarities with GNU Make Makefiles; does not use GNU Make.
+
+# What will our generated dylib be named?
+TWEAK_NAME="GravitationPrefs"
+# Minimum iOS
+MINIOS="10.0"
+# Archs supported?
+ARCHS="arm64 arm64e"
+# flags to pass to clang 
+CFLAGS=""
+# What type of project is this? (Tweak | Library | Prefs | SubTweak)
+TWEAK_TYPE="Prefs"
+# What files should we preprocess into .m files?
+LOGOS_FILE=""
+# Rest of the shit we need?
+TWEAK_FILES="$(find *.m | xargs)"
+# What do we run over ssh after the deb has been installed?
+INSTALL_CMD="sbreload; killall -9 Preferences"
+# Libraries to link
+# libobjc and libc++ are included by default
+LIBS=""
+# Frameworks
+# CoreFoundation, Foundation, UIKit, CoreGraphics, and QuartzCore are included by default
+FRAMEWORKS="CoreMotion"
+SUBPROJECTS=""
