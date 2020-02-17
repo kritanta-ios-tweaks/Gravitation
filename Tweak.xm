@@ -29,9 +29,9 @@ NSDictionary *prefs = nil;
 // #pragma Toggle Animations
 void toggleAnimations()
 {
-	if (!_rtGravityActive && _pfTweakEnabled)[[NSNotificationCenter defaultCenter] postNotificationName:@"GravitationStart" object:nil];
-	else  [[NSNotificationCenter defaultCenter] postNotificationName:@"GravitationStop" object:nil];
-	_rtGravityActive = !_rtGravityActive;
+    if (!_rtGravityActive && _pfTweakEnabled)[[NSNotificationCenter defaultCenter] postNotificationName:@"GravitationStart" object:nil];
+    else  [[NSNotificationCenter defaultCenter] postNotificationName:@"GravitationStop" object:nil];
+    _rtGravityActive = !_rtGravityActive;
 }
 
 
@@ -60,62 +60,58 @@ void toggleAnimations()
 - (id)init
 {
     id o = %orig;
-	
+    
     return o;
 }
 
 - (void)layoutIconsNow
 {
-	
-	 	%orig;
-		 /*
-	*/
-  	//[self.gravitation_gravitationAnimator removeAllBehaviors];
-	if (!self.gravitation_observersAdded)
-	{
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(gravitation_startAnimations)name:@"GravitationStart" object:nil];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(gravitation_endAnimations)name:@"GravitationStop" object:nil];
+    %orig;
+    if (!self.gravitation_observersAdded)
+    {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(gravitation_startAnimations)name:@"GravitationStart" object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(gravitation_endAnimations)name:@"GravitationStop" object:nil];
 
-		self.gravitation_observersAdded=YES;
-	}
+        self.gravitation_observersAdded=YES;
+    }
 }
 
 
 //
-//	Hack to force all icon views to always be loaded into memory even
-//		when they are off screen.
+//    Hack to force all icon views to always be loaded into memory even
+//        when they are off screen.
 //
-//	Default iOS behavior is to reuse icon views, which is smart, but
-// 		completely breaks the gravity engine. 
+//    Default iOS behavior is to reuse icon views, which is smart, but
+//         completely breaks the gravity engine. 
 //
 //  #pragma IconHack
 //
 - (void)setVisibleColumnRange:(NSRange)range
 {
-	// We need to wait until icons have been initially loaded, at least, to do this. 
-	// Otherwise it will completely screw up icon labels (wtf apple??)
-	if (self.gravitation_isReadyForMemoryFuck && range.length == 0)range.length = self.iconsInRowForSpacingCalculation;
-	if (!_rtGravityActive)%orig(range);
+    // We need to wait until icons have been initially loaded, at least, to do this. 
+    // Otherwise it will completely screw up icon labels (wtf apple??)
+    if (self.gravitation_isReadyForMemoryFuck && range.length == 0)range.length = self.iconsInRowForSpacingCalculation;
+    if (!_rtGravityActive)%orig(range);
 }
 
 // Hook both setter and getter in case they aren't called consecutively
 - (NSRange)visibleColumnRange 
 {
-	NSRange range = %orig;
-	if (self.gravitation_isReadyForMemoryFuck && range.length == 0)range.length = self.iconsInRowForSpacingCalculation;
-	return range;
+    NSRange range = %orig;
+    if (self.gravitation_isReadyForMemoryFuck && range.length == 0)range.length = self.iconsInRowForSpacingCalculation;
+    return range;
 }
 
 //  ios 12 version of the icon hack above
-//	needs work
+//    needs work
 - (void)showIconImagesFromColumn:(NSInteger)arg1 toColumn:(NSInteger)arg2 totalColumns:(NSInteger)arg3 allowAnimations:(BOOL)arg4
 {
-	if (!(arg3==4))
-	{
-		%orig(0,3,4,NO);
-	}
-	else
-		%orig(arg1, arg2, arg3, arg4);
+    if (!(arg3==4))
+    {
+        %orig(0,3,4,NO);
+    }
+    else
+        %orig(arg1, arg2, arg3, arg4);
 }
 
 // #pragma Animation Start/Stop
@@ -123,61 +119,61 @@ void toggleAnimations()
 - (void)gravitation_startAnimations 
 {
     if (_pfFingerGravityEnabled)[self setValue:@NO forKey:@"deliversTouchesForGesturesToSuperview"];
-	self.gravitation_isReadyForMemoryFuck = YES;
-	if ([self respondsToSelector:@selector(setVisibleColumnRange:)])
-		[self setVisibleColumnRange:NSMakeRange(0,4)];
-	else 
-		[self showIconImagesFromColumn:0 toColumn:3 totalColumns:4 allowAnimations:NO];
+    self.gravitation_isReadyForMemoryFuck = YES;
+    if ([self respondsToSelector:@selector(setVisibleColumnRange:)])
+        [self setVisibleColumnRange:NSMakeRange(0,4)];
+    else 
+        [self showIconImagesFromColumn:0 toColumn:3 totalColumns:4 allowAnimations:NO];
 
-	[self layoutIconsNow];
-	//UIView *refView = (_pfConglomerate)? self.superview : self;
-	self.gravitation_gravitationAnimator = [[UIDynamicAnimator alloc] initWithReferenceView:self];
-	self.gravitation_gravitationBehavior = [[UIGravityBehavior alloc] initWithItems:@[]];
+    [self layoutIconsNow];
+    //UIView *refView = (_pfConglomerate)? self.superview : self;
+    self.gravitation_gravitationAnimator = [[UIDynamicAnimator alloc] initWithReferenceView:self];
+    self.gravitation_gravitationBehavior = [[UIGravityBehavior alloc] initWithItems:@[]];
 
-	self.gravitation_gravitationCollisionBehavior = [[UICollisionBehavior alloc] initWithItems:@[]];
+    self.gravitation_gravitationCollisionBehavior = [[UICollisionBehavior alloc] initWithItems:@[]];
     self.gravitation_gravitationCollisionBehavior.translatesReferenceBoundsIntoBoundary = YES;
     self.gravitation_gravitationCollisionBehavior.collisionMode = UICollisionBehaviorModeEverything;
     self.gravitation_gravitationCollisionBehavior.collisionDelegate = self;
 
-	if (self.gravitation_gravitationBehavior)
-	{
-		for (UIView *i in self.subviews)
-		{
-			if (![i.description containsString:@"SBIcon"])continue;
-			if (![self.gravitation_gravitationBehavior.items containsObject:i])
-			{
-				[self.gravitation_gravitationBehavior addItem:i];
-			}	
-		}
-	}
-	if (self.gravitation_gravitationCollisionBehavior)
-	{
-		for (UIView *i in self.subviews)
-		{
-			if (![i.description containsString:@"SBIcon"])continue;
-			if (![self.gravitation_gravitationCollisionBehavior.items containsObject:i])
-			{
-				[self.gravitation_gravitationCollisionBehavior addItem:i];
-			}	
-		}
-	}
+    if (self.gravitation_gravitationBehavior)
+    {
+        for (UIView *i in self.subviews)
+        {
+            if (![i.description containsString:@"SBIcon"])continue;
+            if (![self.gravitation_gravitationBehavior.items containsObject:i])
+            {
+                [self.gravitation_gravitationBehavior addItem:i];
+            }    
+        }
+    }
+    if (self.gravitation_gravitationCollisionBehavior)
+    {
+        for (UIView *i in self.subviews)
+        {
+            if (![i.description containsString:@"SBIcon"])continue;
+            if (![self.gravitation_gravitationCollisionBehavior.items containsObject:i])
+            {
+                [self.gravitation_gravitationCollisionBehavior addItem:i];
+            }    
+        }
+    }
 
-	__weak SBIconListView *weakSelf = self;
+    __weak SBIconListView *weakSelf = self;
 
-	self.gravitation_motionManager = [[CMMotionManager alloc] init];
+    self.gravitation_motionManager = [[CMMotionManager alloc] init];
 
-	[self.gravitation_motionManager startDeviceMotionUpdatesToQueue:[NSOperationQueue mainQueue] 
-														withHandler:^(CMDeviceMotion * _Nullable motion, NSError * _Nullable error)
-		{
+    [self.gravitation_motionManager startDeviceMotionUpdatesToQueue:[NSOperationQueue mainQueue] 
+                                                        withHandler:^(CMDeviceMotion * _Nullable motion, NSError * _Nullable error)
+        {
 
-			if (error != nil)
-			{
-				NSLog(@"Error %@",error);
-				return;
-			}
-			weakSelf.gravitation_gravitationBehavior.gravityDirection = CGVectorMake(motion.gravity.x * 3, -motion.gravity.y * 3);
-		}
-	];
+            if (error != nil)
+            {
+                NSLog(@"Error %@",error);
+                return;
+            }
+            weakSelf.gravitation_gravitationBehavior.gravityDirection = CGVectorMake(motion.gravity.x * 3, -motion.gravity.y * 3);
+        }
+    ];
     [self.gravitation_gravitationAnimator addBehavior:self.gravitation_gravitationCollisionBehavior];
     [self.gravitation_gravitationAnimator addBehavior:self.gravitation_gravitationBehavior];
 }
@@ -185,29 +181,29 @@ void toggleAnimations()
 %new 
 - (void)gravitation_endAnimations
 {
-	[self setValue:@YES forKey:@"deliversTouchesForGesturesToSuperview"];
-  	[self.gravitation_gravitationAnimator removeAllBehaviors];
+    [self setValue:@YES forKey:@"deliversTouchesForGesturesToSuperview"];
+      [self.gravitation_gravitationAnimator removeAllBehaviors];
  
-  	[UIView animateWithDuration:1.0
-  				    	  delay:0.0
-	     usingSpringWithDamping:.8
-		  initialSpringVelocity:5
-					    options:UIViewAnimationOptionCurveLinear
-                     animations:^{                 
+      [UIView animateWithDuration:1.0
+                            delay:0.0
+           usingSpringWithDamping:.8
+            initialSpringVelocity:5
+                          options:UIViewAnimationOptionCurveLinear
+                       animations:^{                 
                    for (UIView *obj in self.subviews)
-					{
-					   CGPoint origin = [self originForIconAtIndex:[self.subviews indexOfObject:obj]];
-					   [(UIView *)obj setTransform:CGAffineTransformIdentity];
+                    {
+                       CGPoint origin = [self originForIconAtIndex:[self.subviews indexOfObject:obj]];
+                       [(UIView *)obj setTransform:CGAffineTransformIdentity];
                        [(UIView *)obj setFrame:CGRectMake(origin.x, origin.y, ((UIView *)obj).frame.size.width, ((UIView *)obj).frame.size.height)];
-                   	}
+                    }
                }
                completion:^(BOOL finished)
-			   {
+               {
                }];
-	self.gravitation_gravitationAnimator = nil;
-	self.gravitation_gravitationBehavior = nil;
-	self.gravitation_gravitationCollisionBehavior = nil;
-	self.gravitation_motionManager = nil;
+    self.gravitation_gravitationAnimator = nil;
+    self.gravitation_gravitationBehavior = nil;
+    self.gravitation_gravitationCollisionBehavior = nil;
+    self.gravitation_motionManager = nil;
 }
 
 // #pragma Collision Behavior
@@ -229,49 +225,49 @@ void toggleAnimations()
     // see previous comment
 }
 
-//	#pragma Touch Handling
+//    #pragma Touch Handling
 - (void)touchesBegan:(NSSet *)touches 
            withEvent:(UIEvent *)event
 {
-	if (!_pfFingerGravityEnabled)return;
-	UITouch *touch = [[event allTouches] anyObject];
-  	CGPoint point = [touch locationInView:touch.view];
-	if (self.gravitation_fingerGravBehavior)
-		self.gravitation_fingerGravBehavior.position = point;
-	if (!self.gravitation_fingerGravBehavior)
-	{
-		self.gravitation_fingerGravBehavior = [UIFieldBehavior radialGravityFieldWithPosition:point];
-		for (UIView *v in self.subviews)
-		{
-			[self.gravitation_fingerGravBehavior addItem:v];
-		}
-		self.gravitation_fingerGravBehavior.strength =50;
-		self.gravitation_fingerGravBehavior.minimumRadius=100;
-		self.gravitation_fingerGravBehavior.region = UIRegion.infiniteRegion; // swift? in my objc? more likely than you think!
-    	[self.gravitation_gravitationAnimator addBehavior:self.gravitation_fingerGravBehavior];
-	}
+    if (!_pfFingerGravityEnabled)return;
+    UITouch *touch = [[event allTouches] anyObject];
+      CGPoint point = [touch locationInView:touch.view];
+    if (self.gravitation_fingerGravBehavior)
+        self.gravitation_fingerGravBehavior.position = point;
+    if (!self.gravitation_fingerGravBehavior)
+    {
+        self.gravitation_fingerGravBehavior = [UIFieldBehavior radialGravityFieldWithPosition:point];
+        for (UIView *v in self.subviews)
+        {
+            [self.gravitation_fingerGravBehavior addItem:v];
+        }
+        self.gravitation_fingerGravBehavior.strength =50;
+        self.gravitation_fingerGravBehavior.minimumRadius=100;
+        self.gravitation_fingerGravBehavior.region = UIRegion.infiniteRegion; // swift? in my objc? more likely than you think!
+        [self.gravitation_gravitationAnimator addBehavior:self.gravitation_fingerGravBehavior];
+    }
 }
 
 - (void)touchesMoved:(NSSet *)touches 
-		   withEvent:(UIEvent *)event
+           withEvent:(UIEvent *)event
 {
-	if (!_pfFingerGravityEnabled)return;
-	UITouch *touch = [[event allTouches] anyObject];
-  	CGPoint point = [touch locationInView:touch.view];
-	CGFloat force = (touch.force == 0)? 2 : touch.force;
-	if (self.gravitation_fingerGravBehavior)
-	{
-		self.gravitation_fingerGravBehavior.strength =50*force;
-		self.gravitation_fingerGravBehavior.position = point;
-	}
+    if (!_pfFingerGravityEnabled)return;
+    UITouch *touch = [[event allTouches] anyObject];
+      CGPoint point = [touch locationInView:touch.view];
+    CGFloat force = (touch.force == 0)? 2 : touch.force;
+    if (self.gravitation_fingerGravBehavior)
+    {
+        self.gravitation_fingerGravBehavior.strength =50*force;
+        self.gravitation_fingerGravBehavior.position = point;
+    }
 }
 - (void)touchesEnded:(NSSet *)touches 
            withEvent:(UIEvent *)event
-		   {
-			   if (!_pfFingerGravityEnabled)return;
-			   [self.gravitation_gravitationAnimator removeBehavior:self.gravitation_fingerGravBehavior];
-			   self.gravitation_fingerGravBehavior = nil;
-		   }
+           {
+               if (!_pfFingerGravityEnabled)return;
+               [self.gravitation_gravitationAnimator removeBehavior:self.gravitation_fingerGravBehavior];
+               self.gravitation_fingerGravBehavior = nil;
+           }
 
 %end
 
@@ -281,7 +277,7 @@ void toggleAnimations()
 
 - (void)motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event
 {
-	%orig;
+    %orig;
     if(event.type == UIEventSubtypeMotionShake)
     {
         toggleAnimations();
@@ -297,7 +293,7 @@ void toggleAnimations()
 
 - (BOOL)hidesOffscreenCustomPageViews
 {
-	return NO;
+    return NO;
 }
 
 %end
@@ -365,6 +361,6 @@ static void preferencesChanged()
         CFNotificationSuspensionBehaviorDeliverImmediately
     );
 
-	NSLog(@"Gravitation: Initialized");
+    NSLog(@"Gravitation: Initialized");
 }
 
