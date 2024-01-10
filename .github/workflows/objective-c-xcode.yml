@@ -1,6 +1,4 @@
 name: dragon-build
-uses: DragonBuild/build@0.0.9
-
 
 on:
   push:
